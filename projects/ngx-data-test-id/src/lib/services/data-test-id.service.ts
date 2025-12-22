@@ -77,11 +77,10 @@ export class DataTestIdService {
     const registeredDataTestid = this.dataTestidRegistry.get(dataTestid);
 
     if (registeredDataTestid && registeredDataTestid.element === element) {
+      this.dataTestidRegistry.delete(dataTestid);
       this.duplicateDataTestIds.delete(dataTestid);
       this.dataTestidElementRef.delete(element);
     }
-
-    this.dataTestidElementRef.delete(element);
   }
 
   public getAllDataTestIds(): DataTestIdMetaData[] {
