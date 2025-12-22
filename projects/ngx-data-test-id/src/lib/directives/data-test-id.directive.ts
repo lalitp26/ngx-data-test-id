@@ -12,11 +12,11 @@ export class DataTestIdDirective {
   private readonly document = inject(DOCUMENT);
   private currentDataTestId: string | null = null;
 
-  protected readonly libDataTestId = input<string | null>(null);
-  protected readonly libDataTestIdPrefix = input<string | null>(null);
-  protected readonly libDataTestIdSuffix = input<string | null>(null);
-  protected readonly developmentMode = input<boolean>(false);
-  protected readonly validate = input<boolean>(true);
+  public  readonly libDataTestId = input<string | null>(null);
+  public  readonly libDataTestIdPrefix = input<string | null>(null);
+  public  readonly libDataTestIdSuffix = input<string | null>(null);
+  public  readonly developmentMode = input<boolean>(false);
+  public  readonly validate = input<boolean>(true);
 
   ngOnInit(): void {
     // if (!this.developmentMode() && !isDevMode()) {
