@@ -3,7 +3,7 @@ import { ButtonDataTestIdStrategy } from './button-data-test-id-strategy';
 import { DataTestIdGenerationStrategy } from './data-test-id-generation.strategy';
 import { InputDataTestIdStrategy } from './input-data-test-id-strategy';
 
-export class DataTestidGeneration {
+export class DataTestIdGeneration {
   private strategies: DataTestIdGenerationStrategy[] = [];
 
   constructor(strategies: DataTestIdGenerationStrategy[] = []) {
