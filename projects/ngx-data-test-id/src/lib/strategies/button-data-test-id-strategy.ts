@@ -20,7 +20,7 @@ export class ButtonDataTestIdStrategy extends BaseDataTestIdGenerationStrategy {
 
     let baseId = 'button';
 
-    if (type && type !== 'button' && text && text.length > 0) {
+    if (type && type !== 'button') {
       baseId = `${type}-${text}`;
     }
 
