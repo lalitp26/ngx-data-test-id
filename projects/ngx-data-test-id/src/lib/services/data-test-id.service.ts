@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, isDevMode } from '@angular/core';
 
 export interface DataTestIdMetaData {
   id: string;
@@ -21,16 +21,18 @@ export class DataTestIdService {
       typeof dataTestidMetaData.id !== 'string' ||
       dataTestidMetaData.id.trim().length === 0
     ) {
-      console.error(
-        '[DataTestIdService] Invalid id provided in dataTestidMetaData'
-      );
+      if (isDevMode())
+        console.error(
+          '[DataTestIdService] Invalid id provided in dataTestidMetaData'
+        );
       return;
     }
 
     if (!element || !(element instanceof HTMLElement)) {
-      console.error(
-        '[DataTestIdService] Invalid element provided in dataTestidMetaData'
-      );
+      if (isDevMode())
+        console.error(
+          '[DataTestIdService] Invalid element provided in dataTestidMetaData'
+        );
       return;
     }
 
@@ -61,16 +63,18 @@ export class DataTestIdService {
       typeof dataTestid !== 'string' ||
       dataTestid.trim().length === 0
     ) {
-      console.error(
-        '[DataTestIdService] Invalid dataTestid for unregistration provided'
-      );
+      if (isDevMode())
+        console.error(
+          '[DataTestIdService] Invalid dataTestid for unregistration provided'
+        );
       return;
     }
 
     if (!element || !(element instanceof HTMLElement)) {
-      console.error(
-        '[DataTestIdService] Invalid element provided for unregistration'
-      );
+      if (isDevMode())
+        console.error(
+          '[DataTestIdService] Invalid element provided for unregistration'
+        );
       return;
     }
 

@@ -1,12 +1,25 @@
-import { Directive, ElementRef, inject, input } from '@angular/core';
+import {
+  Directive,
+  ElementRef,
+  inject,
+  input,
+  isDevMode,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { DataTestIdService } from '../services/data-test-id.service';
 import { DOCUMENT } from '@angular/common';
+import {
+  DataTestidAttributes,
+  DataTestidAttributesArray,
+} from '../models/data-test-id.attributes';
+import { DataTestidRegex } from '../models/data-test-id.regex';
 
 @Directive({
   selector: '[libDataTestId]',
   standalone: true,
 })
-export class DataTestIdDirective {
+export class DataTestIdDirective implements OnInit, OnDestroy {
   private readonly element = inject(ElementRef<HTMLElement>);
   private readonly dataTestIdService = inject(DataTestIdService);
   private readonly document = inject(DOCUMENT);
@@ -19,12 +32,7 @@ export class DataTestIdDirective {
   public readonly validate = input<boolean>(true);
 
   ngOnInit(): void {
-    // if (!this.developmentMode() && !isDevMode()) {
-    //   return;
-    // }
-
-    if (!this.element?.nativeElement) {
-      console.error('[libDataTestId] ElementRef is not available');
+    if (!this.developmentMode() && !isDevMode()) {
       return;
     }
 
@@ -42,7 +50,8 @@ export class DataTestIdDirective {
   }
 
   ngOnDestroy(): void {
-    if (this.currentDataTestId && this.element?.nativeElement) {
+    if (this.currentDataTestId) {
+      this.element.nativeElement.removeAttribute('data-testid');
       this.dataTestIdService.unregisterDataTestId(
         this.currentDataTestId,
         this.element.nativeElement
@@ -64,13 +73,20 @@ export class DataTestIdDirective {
     }
 
     if (!dataTestId) {
-      console.error('[libDataTestId] Unable to resolve data-test-id');
+      if (isDevMode()) {
+        console.error('[libDataTestId] Unable to resolve data-test-id');
+      }
       return null;
     }
 
     const prefix = this.libDataTestIdPrefix();
     if (prefix) {
       dataTestId = `${prefix}-${dataTestId}`;
+    }
+
+    const suffix = this.libDataTestIdSuffix();
+    if (suffix) {
+      dataTestId = `${dataTestId}-${suffix}`;
     }
 
     return dataTestId;
@@ -103,16 +119,7 @@ export class DataTestIdDirective {
   }
 
   private getExplicitDataTestId(element: HTMLElement): string | null {
-    const dataTestIdAttr = [
-      'data-testid',
-      'dataTestId',
-      'libDataTestId',
-      'data-test-id',
-      'data-qa',
-      'data-test',
-    ];
-
-    for (const attr of dataTestIdAttr) {
+    for (const attr of DataTestidAttributesArray) {
       const attrValue = element.getAttribute(attr);
       if (attrValue && attrValue.trim().length > 0) {
         return this.sanitizeDataTestId(attrValue.trim());
@@ -156,11 +163,11 @@ export class DataTestIdDirective {
 
     if (['input', 'select', 'textarea'].includes(tagName)) {
       typeAttribute = element.getAttribute('type') || 'text';
-      const placeHolder = element.getAttribute('placeholder');
+      const placeholder = element.getAttribute('placeholder');
 
-      if (placeHolder && placeHolder.trim().length > 0) {
+      if (placeholder && placeholder.trim().length > 0) {
         return this.sanitizeDataTestId(
-          `${typeAttribute}-${placeHolder.trim()}`
+          `${typeAttribute}-${placeholder.trim()}`
         );
       }
     }
@@ -168,20 +175,14 @@ export class DataTestIdDirective {
     if (['button', 'submit', 'reset'].includes(tagName)) {
       typeAttribute = element.getAttribute('type') || 'button';
       const valueAttribute =
-        element.getAttribute('value') ||
-        (element as HTMLButtonElement).textContent;
+        element.getAttribute('value') || element.textContent;
       if (valueAttribute && valueAttribute.trim().length > 0) {
         return this.sanitizeDataTestId(
           `${typeAttribute}-${valueAttribute.trim()}`
         );
       }
     }
-    if (
-      tagName &&
-      tagName.trim().length > 0 &&
-      typeAttribute &&
-      typeAttribute.trim().length > 0
-    ) {
+    if (typeAttribute && typeAttribute.trim().length > 0) {
       return this.sanitizeDataTestId(`${tagName}-${typeAttribute}`);
     }
     return null;
@@ -204,15 +205,17 @@ export class DataTestIdDirective {
   private sanitizeDataTestId(dataTestId: string): string {
     return dataTestId
       .toLowerCase()
-      .replace(/[^a-z0-9-_]/g, '-') // replace invalid characters with hyphen
-      .replace(/--+/g, '-') // replace multiple hyphens with a single hyphen
-      .replace(/^-+/, '') // remove leading hyphens
-      .replace(/-+$/, ''); // remove trailing hyphens
+      .replace(DataTestidRegex.INVALID_CHARACTERS, '-') // replace invalid characters with hyphen
+      .replace(DataTestidRegex.MULTIPLE_HYPHENS, '-') // replace multiple hyphens with a single hyphen
+      .replace(DataTestidRegex.LEADING_HYPHENS, '') // remove leading hyphens
+      .replace(DataTestidRegex.TRAILING_HYPHENS, ''); // remove trailing hyphens
   }
 
   private validateDataTestIdFormat(dataTestId: string): void {
     if (typeof dataTestId !== 'string' || dataTestId.trim().length === 0) {
-      console.error('[libDataTestId] data-test-id must be a non-empty string');
+      if (isDevMode()) {
+        console.error('[libDataTestId] data-test-id must be a non-empty string');
+      }
       return;
     }
 
@@ -225,28 +228,31 @@ export class DataTestIdDirective {
     if (dataTestId.length > 100) {
       validationErrors.push('Test ID is too long (maximum 100 characters)');
     }
-
-    if (/^[a-zA-Z0-9-_]+$/.test(dataTestId) === false) {
+    // Validate allowed characters
+    if (!DataTestidRegex.ALLOWED_CHARACTERS.test(dataTestId)) {
       validationErrors.push(
         'Test ID contains invalid characters (only alphanumeric, hyphens, and underscores are allowed)'
       );
     }
 
-    if (/--/.test(dataTestId) || /__/.test(dataTestId)) {
+    if (
+      DataTestidRegex.CONSECUTIVE_HYPHENS.test(dataTestId) ||
+      DataTestidRegex.CONSECUTIVE_UNDERSCORES.test(dataTestId)
+    ) {
       validationErrors.push(
         'Test ID contains consecutive hyphens or underscores'
       );
     }
 
-    if (/^-|-$/.test(dataTestId)) {
+    if (DataTestidRegex.START_OR_END_HYPHEN.test(dataTestId)) {
       validationErrors.push('Test ID cannot start or end with a hyphen');
     }
 
-    if (/[A-Z]/.test(dataTestId)) {
+    if (DataTestidRegex.UPPERCASE_LETTERS.test(dataTestId)) {
       validationErrors.push('Test ID should be in lowercase');
     }
 
-    if (validationErrors.length > 0) {
+    if (validationErrors.length > 0 && isDevMode()) {
       console.warn(
         '[libDataTestId] data-test-id validation errors:\n' +
           validationErrors.join('\n')
@@ -255,11 +261,10 @@ export class DataTestIdDirective {
   }
 
   private setDataTestIdAttribute(dataTestId: string): void {
-    if (!this.element?.nativeElement) {
-      console.error('[libDataTestId] ElementRef is not available');
-      return;
-    }
-    this.element.nativeElement.setAttribute('data-testid', dataTestId);
+    this.element.nativeElement.setAttribute(
+      DataTestidAttributes.DATA_TESTID,
+      dataTestId
+    );
   }
 
   private registerDataTestId(dataTestId: string): void {
