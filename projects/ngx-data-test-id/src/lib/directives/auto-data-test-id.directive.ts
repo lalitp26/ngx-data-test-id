@@ -1,5 +1,6 @@
 import { Directive, ElementRef, inject } from '@angular/core';
-import { DataTestidGeneration } from '../strategies/data-test-id-generation';
+import { DataTestIdGeneration } from '../strategies/data-test-id-generation';
+import { DataTestidAttributes } from '../models/data-test-id.attributes';
 
 @Directive({
   selector: `
@@ -13,7 +14,7 @@ import { DataTestidGeneration } from '../strategies/data-test-id-generation';
   standalone: true,
 })
 export class AutoDataTestIdDirective {
-  private readonly testIdGenerator = new DataTestidGeneration();
+  private readonly testIdGenerator = new DataTestIdGeneration();
   private readonly elementRef = inject(ElementRef<HTMLElement>);
   private readonly element: HTMLElement = this.elementRef.nativeElement;
 
@@ -22,7 +23,10 @@ export class AutoDataTestIdDirective {
   }
 
   private generateAndSetDataTestid(): void {
-    if (!this.element || this.element.hasAttribute('data-testid')) {
+    if (
+      !this.element ||
+      this.element.hasAttribute(DataTestidAttributes.DATA_TESTID)
+    ) {
       return;
     }
 
@@ -33,10 +37,10 @@ export class AutoDataTestIdDirective {
         '[AutoDataTestId] Generated empty data-testid, using fallback.'
       );
       const fallbackId = this.element.tagName.toLowerCase() + '-' + Date.now();
-      this.element.setAttribute('data-testid', fallbackId);
+      this.element.setAttribute(DataTestidAttributes.DATA_TESTID, fallbackId);
       return;
     }
 
-    this.element.setAttribute('data-testid', testId);
+    this.element.setAttribute(DataTestidAttributes.DATA_TESTID, testId);
   }
 }
