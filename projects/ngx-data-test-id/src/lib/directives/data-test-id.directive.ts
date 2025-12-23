@@ -50,7 +50,7 @@ export class DataTestIdDirective implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.currentDataTestId) {
+    if (this.currentDataTestId && this.element?.nativeElement) {
       this.element.nativeElement.removeAttribute('data-testid');
       this.dataTestIdService.unregisterDataTestId(
         this.currentDataTestId,
