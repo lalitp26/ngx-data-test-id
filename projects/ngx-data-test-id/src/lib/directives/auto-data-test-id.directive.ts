@@ -4,12 +4,12 @@ import { DataTestidAttributes } from '../models/data-test-id.attributes';
 
 @Directive({
   selector: `
-    button:not([${DataTestidAttributes.DATA_TESTID}]),
-  input:not([${DataTestidAttributes.DATA_TESTID}]),
-  textarea:not([${DataTestidAttributes.DATA_TESTID}]),
-  select:not([${DataTestidAttributes.DATA_TESTID}]),
-  a:not([${DataTestidAttributes.DATA_TESTID}]),
-  [role="button"]:not([${DataTestidAttributes.DATA_TESTID}]),
+    button:not([data-testid]),
+  input:not([data-testid]),
+  textarea:not([data-testid]),
+  select:not([data-testid]),
+  a:not([data-testid]),
+  [role="button"]:not([data-testid]),
   [libAutoDataTestId]`,
   standalone: true,
 })
