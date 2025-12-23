@@ -7,5 +7,5 @@ export const DataTestidRegex = {
   INVALID_CHARACTERS: /[^a-z0-9-_]/g, // Characters that are not alphanumeric, hyphens, or underscores
   MULTIPLE_HYPHENS: /--+/g, // Two or more hyphens in a row
   LEADING_HYPHENS: /^-+/, // Leading hyphens
-  TRAILING_HYPHENS: /-+$/, //
+  TRAILING_HYPHENS: /-+$/, // Trailing hyphens
 };
